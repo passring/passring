@@ -9,6 +9,7 @@ use rand::{CryptoRng, Rng};
 use serde_json::json;
 use sha3::Keccak512;
 
+#[derive(Clone, Debug)]
 pub struct VotingContext {
     pub voting_id: [u8; 32],
     pub choices: Vec<String>,

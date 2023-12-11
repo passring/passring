@@ -4,7 +4,7 @@ use crate::types::{Challenge, KeyImage, Response};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Vote {
     pub voting_id: [u8; 32],
     pub choice_idx: u8,

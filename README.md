@@ -5,4 +5,5 @@ Two-agency system of secret remote electronic voting (RSEV) based on ring signat
 # Example
 ```bash
 cargo run --example main
+cargo run --example store
 ```
