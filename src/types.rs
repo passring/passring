@@ -49,11 +49,10 @@ impl<'de> serde::Deserialize<'de> for Challenge {
         let mut bytes = [0u8; 32];
         bytes.copy_from_slice(&bytes_vec);
         let key = Scalar::from_canonical_bytes(bytes);
-        if bool::from(key.is_some()) {
-            return Ok(Challenge(key.unwrap()));
-        } else {
+        if key.is_none().into() {
             return Err(serde::de::Error::custom("invalid challenge, not in field"));
         }
+        Ok(Challenge(key.unwrap()))
     }
 }
 
@@ -104,11 +103,10 @@ impl<'de> serde::Deserialize<'de> for Response {
         let mut bytes = [0u8; 32];
         bytes.copy_from_slice(&bytes_vec);
         let key = Scalar::from_canonical_bytes(bytes);
-        if bool::from(key.is_some()) {
-            return Ok(Response(key.unwrap()));
-        } else {
+        if key.is_none().into() {
             return Err(serde::de::Error::custom("invalid response, not in field"));
         }
+        Ok(Response(key.unwrap()))
     }
 }
 
@@ -162,7 +160,7 @@ impl<'de> serde::Deserialize<'de> for KeyImage {
             CompressedRistretto::from_slice(&bytes).map_err(serde::de::Error::custom)?;
 
         let point = compressed_key.decompress();
-        if bool::from(point.is_none()) {
+        if point.is_none() {
             return Err(serde::de::Error::custom("invalid key image, not in field"));
         }
         Ok(KeyImage(point.unwrap()))

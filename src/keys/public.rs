@@ -4,7 +4,7 @@ use hex::ToHex;
 use rand_core::CryptoRngCore;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PublicKey {
     pub point: RistrettoPoint,
 }
@@ -44,7 +44,7 @@ impl<'de> Deserialize<'de> for PublicKey {
             CompressedRistretto::from_slice(&bytes).map_err(serde::de::Error::custom)?;
 
         let point = compressed_key.decompress();
-        if bool::from(point.is_none()) {
+        if point.is_none() {
             return Err(serde::de::Error::custom("invalid public key, not in field"));
         }
         Ok(PublicKey {
@@ -74,14 +74,6 @@ impl Random for PublicKey {
     {
         PublicKey {
             point: RistrettoPoint::random(rng),
-        }
-    }
-}
-
-impl Clone for PublicKey {
-    fn clone(&self) -> Self {
-        PublicKey {
-            point: self.point.clone(),
         }
     }
 }

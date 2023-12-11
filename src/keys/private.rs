@@ -4,6 +4,7 @@ use hex::ToHex;
 use rand_core::CryptoRngCore;
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PrivateKey {
     pub key: Scalar,
 }
@@ -32,34 +33,17 @@ impl<'de> Deserialize<'de> for PrivateKey {
     where
         D: serde::de::Deserializer<'de>,
     {
-        struct PrivateKeyVisitor;
-
-        impl<'de> serde::de::Visitor<'de> for PrivateKeyVisitor {
-            type Value = PrivateKey;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("a hex-encoded private key")
-            }
-
-            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                let bytes_vec = hex::decode(s).map_err(serde::de::Error::custom)?;
-                let mut bytes = [0u8; 32];
-                bytes.copy_from_slice(&bytes_vec);
-                let key = Scalar::from_canonical_bytes(bytes);
-                if bool::from(key.is_some()) {
-                    return Ok(PrivateKey { key: key.unwrap() });
-                } else {
-                    return Err(serde::de::Error::custom(
-                        "invalid private key, not in field",
-                    ));
-                }
-            }
+        let val = String::deserialize(deserializer)?;
+        let bytes_vec = hex::decode(val).map_err(serde::de::Error::custom)?;
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(&bytes_vec);
+        let key = Scalar::from_canonical_bytes(bytes);
+        if key.is_none().into() {
+            return Err(serde::de::Error::custom(
+                "invalid private key, not in field",
+            ));
         }
-
-        deserializer.deserialize_struct("PrivateKey", &[], PrivateKeyVisitor)
+        Ok(PrivateKey { key: key.unwrap() })
     }
 }
 
@@ -76,14 +60,6 @@ impl Random for PrivateKey {
     {
         PrivateKey {
             key: Scalar::random(rng),
-        }
-    }
-}
-
-impl Clone for PrivateKey {
-    fn clone(&self) -> Self {
-        PrivateKey {
-            key: self.key.clone(),
         }
     }
 }
