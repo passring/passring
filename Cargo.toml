@@ -1,13 +1,17 @@
 [package]
 name = "passring"
-description = "Secret remote electronic voting based on ring signatures"
-license-file = "LICENSE"
-version = "0.1.1"
+version = "0.1.2"
+authors = ["Stanislav Zhevachevskyi <ih3xcode@protonmail.com>"]
 edition = "2021"
+description = "Secret remote electronic voting based on ring signatures"
+documentation = "https://docs.rs/passring"
+readme = "README.md"
+homepage = "https://docs.nau-gitiral/passring/"
+repository = "https://github.com/passring/passring"
+license = "AGPL-3"
 
 [features]
 serde = []
-
 
 [dependencies]
 chacha20poly1305 = "0.10.1"

@@ -20,7 +20,7 @@
 //! Passring is a cryptographic library for secure voting systems. It provides a set of cryptographic primitives for 
 //! secure voting systems, including key generation, encryption, decryption, and signature generation.
 //! 
-//! For more information, see the [Passring whitepaper](https://docs.nau-digital.com/passring-whitepaper).
+//! For more information, see the [Passring whitepaper](https://docs.nau-digital.com/passring/whitepaper).
 //! ## Features
 //! 
 //! - **Secure**: Passring uses the latest cryptographic algorithms to ensure the security of the voting system.
