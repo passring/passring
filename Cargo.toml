@@ -8,7 +8,7 @@ documentation = "https://docs.rs/passring"
 readme = "README.md"
 homepage = "https://docs.nau-gitiral/passring/"
 repository = "https://github.com/passring/passring"
-license = "AGPL-3"
+license = "AGPL-3.0-only"
 
 [features]
 serde = []
