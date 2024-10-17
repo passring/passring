@@ -1,129 +1,161 @@
-use crate::PublicKey;
-use chacha20poly1305::{
-    aead::{Aead, KeyInit},
-    ChaCha20Poly1305,
-};
+// Copyright (C) 2024 Stanislav Zhevachevskyi
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+//! Passring signature
+
+use crate::errors::PassringError::{MalformedSignature};
+use crate::payload::{Payload};
+use crate::{PublicKey, Result};
 use curve25519_dalek::{ristretto::CompressedRistretto, Scalar};
 use nazgul::blsag::BLSAG;
-use serde::{Deserialize, Serialize};
-use sha3::digest::generic_array::GenericArray;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Full signature, representing the voter's signed ballot
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FullSignature {
-    pub voting_id: uuid::Uuid,
-    #[serde(with = "hex::serde")]
+    /// bLSAG's challenge
+    #[cfg_attr(feature = "serde", serde(with = "hex::serde"))]
     pub challenge: Vec<u8>,
-    #[serde(with = "hex::serde")]
+    /// bLSAG's responses
+    #[cfg_attr(feature = "serde", serde(with = "hex::serde"))]
     pub responses: Vec<u8>,
-    #[serde(with = "hex::serde")]
+    /// bLSAG's key image
+    #[cfg_attr(feature = "serde", serde(with = "hex::serde"))]
     pub key_image: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub encrypted: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub nonce: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub key: Vec<u8>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PartialSignature {
-    pub voting_id: uuid::Uuid,
-    #[serde(with = "hex::serde")]
-    pub challenge: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub responses: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub key_image: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub encrypted: Vec<u8>,
-    #[serde(with = "hex::serde")]
-    pub nonce: Vec<u8>,
+    /// Encrypted payload
+    pub payload: Payload,
 }
 
 impl FullSignature {
-    pub fn from_blsag(
-        blsag: BLSAG,
-        encrypted: Vec<u8>,
-        nonce: Vec<u8>,
-        key: Vec<u8>,
-        voting_id: uuid::Uuid,
-    ) -> Self {
-        let responses: Vec<[u8; 32]> = blsag.responses.iter().map(|x| x.to_bytes()).collect();
+    /// Create a new `FullSignature` from a BLSAG and a Payload
+    pub fn from_blsag(blsag: &BLSAG, payload: Payload) -> Self {
+        let responses: Vec<[u8; 32]> = blsag.responses.iter().map(Scalar::to_bytes).collect();
 
-        // merge the responses into a single Vec<u8>
-        let responses = responses.iter().fold(Vec::new(), |mut acc, x| {
-            acc.extend_from_slice(x);
-            acc
-        });
+        let responses: Vec<u8> = responses.iter().flat_map(|x| x.iter()).copied().collect();
 
         FullSignature {
-            voting_id,
             challenge: blsag.challenge.to_bytes().to_vec(),
             responses,
             key_image: blsag.key_image.compress().to_bytes().to_vec(),
-            encrypted,
-            nonce,
-            key,
+            payload,
         }
     }
 
-    pub fn to_blsag(&self, ring: Vec<PublicKey>) -> BLSAG {
-        let challenge =
-            Scalar::from_canonical_bytes((self.challenge.as_slice()).try_into().unwrap()).unwrap();
+    /// Convert the `FullSignature` to a BLSAG
+    ///
+    /// # Errors
+    ///
+    /// * [`MalformedSignature`]: The signature is malformed.
+    pub fn to_blsag(&self, ring: &[PublicKey]) -> Result<BLSAG> {
+        let Ok(challenge_bytes) = self.challenge.as_slice().try_into() else {
+            return Err(MalformedSignature);
+        };
+
+        let Some(challenge) = Scalar::from_canonical_bytes(challenge_bytes).into() else {
+            return Err(MalformedSignature);
+        };
+
+        if self.responses.len() % 32 != 0 {
+            return Err(MalformedSignature);
+        }
+
+        let mut responses_unwrap_err = false;
+
         // unmerge the responses into a Vec<[u8; 32]>
         let responses: Vec<Scalar> = self
             .responses
+            .clone()
             .chunks_exact(32)
-            .map(|x| Scalar::from_canonical_bytes(x.try_into().unwrap()).unwrap())
+            .map(|x| {
+                let bytes = if let Ok(b) = x.try_into() {
+                    b
+                } else {
+                    responses_unwrap_err = true;
+                    [0u8; 32]
+                };
+                if let Some(s) = Scalar::from_canonical_bytes(bytes).into() {
+                    s
+                } else {
+                    responses_unwrap_err = true;
+                    Scalar::default()
+                }
+            })
             .collect();
-        let key_image = CompressedRistretto::from_slice(&self.key_image)
-            .unwrap()
-            .decompress()
-            .unwrap();
 
-        BLSAG {
+        if responses_unwrap_err {
+            return Err(MalformedSignature);
+        }
+
+        let Ok(key_image_uncompressed) = CompressedRistretto::from_slice(&self.key_image) else {
+            return Err(MalformedSignature);
+        };
+
+        let Some(key_image) = key_image_uncompressed.decompress() else {
+            return Err(MalformedSignature);
+        };
+
+        Ok(BLSAG {
             challenge,
             responses,
             ring: ring.iter().map(|x| (*x).into()).collect(),
             key_image,
-        }
+        })
     }
 }
 
-impl From<FullSignature> for PartialSignature {
-    fn from(full: FullSignature) -> Self {
-        PartialSignature {
-            voting_id: full.voting_id,
-            challenge: full.challenge,
-            responses: full.responses,
-            key_image: full.key_image,
-            encrypted: full.encrypted,
-            nonce: full.nonce,
-        }
-    }
-}
+#[cfg(test)]
+mod tests {
+    use curve25519_dalek::RistrettoPoint;
+    use nazgul::traits::Sign;
+    use super::*;
+    use rand_core::OsRng;
+    use sha3::Keccak512;
+    use crate::payload::ClearPayload;
+    use crate::PrivateKey;
 
-impl FullSignature {
-    pub fn from_partial(partial: PartialSignature, key: Vec<u8>) -> Self {
-        FullSignature {
-            voting_id: partial.voting_id,
-            challenge: partial.challenge,
-            responses: partial.responses,
-            key_image: partial.key_image,
-            encrypted: partial.encrypted,
-            nonce: partial.nonce,
-            key,
-        }
-    }
-}
+    #[test]
+    fn test_full_signature() {
+        let private_key = Scalar::random(&mut OsRng);
 
-impl FullSignature {
-    pub fn decrypt(&self) -> Option<crate::passring::Payload> {
-        let cipher = ChaCha20Poly1305::new_from_slice(self.key.as_slice()).unwrap();
-        let nonce = GenericArray::clone_from_slice(&self.nonce);
+        let ring: Vec<_> = (0..9).map(|_| RistrettoPoint::random(&mut OsRng)).collect();
 
-        let d = cipher.decrypt(&nonce, self.encrypted.as_slice()).ok()?;
-        let payload = serde_json::from_slice::<crate::passring::Payload>(&d).ok()?;
-        Some(payload)
+
+        let clear_payload = ClearPayload::new_random(uuid::Uuid::new_v4(), 0, &mut OsRng);
+        let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
+
+        let blsag_signature = BLSAG::sign::<Keccak512, OsRng>(
+            private_key,
+            ring.clone(),
+            0,
+            &serde_json::to_vec(&payload).unwrap(),
+        );
+
+        let full_signature = FullSignature::from_blsag(&blsag_signature, payload.clone());
+
+        let mut ring2: Vec<PublicKey> = ring.iter().map(|x| PublicKey::from(*x)).collect();
+
+        let my_public_key = PublicKey::from(PrivateKey::from(private_key));
+        let my_index = 0;
+        ring2.insert(my_index, my_public_key);
+
+        let blsag_signature_2 = full_signature.to_blsag(&ring2).unwrap();
+
+        assert_eq!(blsag_signature.challenge, blsag_signature_2.challenge, "Challenge mismatch");
+        assert_eq!(blsag_signature.responses, blsag_signature_2.responses, "Responses mismatch");
+        assert_eq!(blsag_signature.key_image, blsag_signature_2.key_image, "Key image mismatch");
+        assert_eq!(blsag_signature.ring, blsag_signature_2.ring, "Ring mismatch");
     }
 }

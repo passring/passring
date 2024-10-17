@@ -13,12 +13,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//! # Passring utility traits
+//! # Passring errors
 
-use rand_core::CryptoRngCore;
+use thiserror::Error;
 
-/// Provides a method for generating random values
-pub trait Random {
-    /// Generate a random value using the given random number generator
-    fn random<R: CryptoRngCore>(rng: &mut R) -> Self;
+/// Passring error type
+#[derive(Error, Debug)]
+pub enum PassringError {
+    /// Something went wrong with the symmetric encryption
+    #[error("Corrupted payload or invalid key")]
+    SymmetricError,
+    /// The payload is invalid
+    #[error("Invalid payload")]
+    InvalidPayload,
+    /// The signature is malformed
+    #[error("Malformed signature")]
+    MalformedSignature,
+    /// The signature is invalid
+    #[error("Invalid signature")]
+    InvalidSignature,
+    /// The voting ID does not match
+    #[error("Voting ID does not match")]
+    VotingIdMismatch,
+    /// The key is not found in the ring
+    #[error("Signing key not found in ring")]
+    KeyNotFound,
 }
