@@ -29,6 +29,8 @@ pub enum VotingChoice {
     Approval(ApprovalVoting),
     /// Rated voting
     Rated(RatedVoting),
+    /// Ranked choice voting (Instant-runoff voting)
+    RankedChoice(RankedChoiceVoting),
 }
 
 
@@ -59,3 +61,8 @@ pub struct RatedVoting {
     pub ratings: Vec<u8>,
 }
 
+/// Ranked choice voting (Instant-runoff voting)
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct RankedChoiceVoting {
+    pub choices: Vec<String>,
+}
