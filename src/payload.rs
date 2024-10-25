@@ -133,10 +133,10 @@ impl ClearPayload {
     ///
     /// ```
     /// use passring::payload::ClearPayload;
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     /// let randomness = vec![0u8; 32]; // must be random bytes
     ///
     /// let payload = ClearPayload::new(voting_id, choice, randomness);
@@ -161,10 +161,10 @@ impl ClearPayload {
     /// ```
     /// use passring::payload::ClearPayload;
     /// use rand_core::OsRng;
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     ///
     /// let payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// ```
@@ -191,10 +191,10 @@ impl ClearPayload {
     /// use passring::payload::ClearPayload;
     /// use chacha20poly1305::{ChaCha20Poly1305, KeyInit};
     /// use rand_core::OsRng;
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     ///
     /// let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// let key = ChaCha20Poly1305::generate_key(&mut OsRng);
@@ -229,12 +229,12 @@ impl ClearPayload {
 mod tests {
     use super::*;
     use rand_core::OsRng;
-    use crate::choices::BasicVoting;
+    use crate::choices::BasicVotingChoice;
 
     #[test]
     fn test_payload() {
         let voting_id = uuid::Uuid::new_v4();
-        let choice = VotingChoice::Basic(BasicVoting::For);
+        let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
         let clear_payload = ClearPayload::new(voting_id, choice, vec![0u8; 32]);
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
         let payload = clear_payload.encrypt(&key, &mut OsRng).unwrap();
@@ -245,7 +245,7 @@ mod tests {
     #[test]
     fn test_payload_random() {
         let voting_id = uuid::Uuid::new_v4();
-        let choice = VotingChoice::Basic(BasicVoting::For);
+        let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
         let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
         let payload = clear_payload.encrypt(&key, &mut OsRng).unwrap();

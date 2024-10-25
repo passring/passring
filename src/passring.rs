@@ -75,12 +75,12 @@ impl Passring {
     /// ```
     /// use rand_core::OsRng;
     /// use passring::{Passring, PrivateKey, PublicKey};
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     ///
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
@@ -147,10 +147,10 @@ impl Passring {
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     /// use uuid::Uuid;
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     ///
     /// let voting_id = Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     ///
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
@@ -204,10 +204,10 @@ impl Passring {
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     /// use uuid::Uuid;
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     ///
     /// let voting_id = Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     ///
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
@@ -254,10 +254,10 @@ impl Passring {
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     /// use uuid::Uuid;
-    /// use passring::choices::{BasicVoting, VotingChoice};
+    /// use passring::choices::{BasicVotingChoice, VotingChoice};
     ///
     /// let voting_id = Uuid::new_v4();
-    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
     /// 
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
@@ -291,14 +291,14 @@ impl Passring {
 mod tests {
     use rand_core::OsRng;
     use crate::{Passring, PrivateKey, PublicKey};
-    use crate::choices::{BasicVoting, VotingChoice};
+    use crate::choices::{BasicVotingChoice, VotingChoice};
     use crate::payload::ClearPayload;
     use crate::traits::Random;
 
     #[test]
     fn test_passring() {
         let voting_id = uuid::Uuid::new_v4();
-        let choice = VotingChoice::Basic(BasicVoting::For);
+        let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
 
         let private_key = PrivateKey::random(&mut OsRng);
         let public_key = PublicKey::from(private_key);
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn test_linking() {
         let voting_id = uuid::Uuid::new_v4();
-        let choice = VotingChoice::Basic(BasicVoting::For);
+        let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
 
         let private_key = PrivateKey::random(&mut OsRng);
         let public_key = PublicKey::from(private_key);

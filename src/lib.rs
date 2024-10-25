@@ -57,7 +57,7 @@
 //! use passring::payload::ClearPayload;
 //! use passring::traits::Random;
 //! use rand_core::OsRng;
-//! use passring::choices::{BasicVoting, VotingChoice};
+//! use passring::choices::{BasicVotingChoice, VotingChoice};
 //!
 //! // Generate a new voting ID
 //! let voting_id = uuid::Uuid::new_v4();
@@ -74,7 +74,7 @@
 //!
 //! // Create a new clear payload
 //!
-//! let choice = VotingChoice::Basic(BasicVoting::For); // The choice of the voter
+//! let choice = VotingChoice::Basic { choice: BasicVotingChoice::For }; // The choice of the voter
 //! let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
 //!
 //! // Encrypt the clear payload

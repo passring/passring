@@ -123,7 +123,7 @@ mod tests {
     use super::*;
     use rand_core::OsRng;
     use sha3::Keccak512;
-    use crate::choices::{BasicVoting, VotingChoice};
+    use crate::choices::{BasicVotingChoice, VotingChoice};
     use crate::payload::ClearPayload;
     use crate::PrivateKey;
 
@@ -132,7 +132,7 @@ mod tests {
         let private_key = Scalar::random(&mut OsRng);
 
         let ring: Vec<_> = (0..9).map(|_| RistrettoPoint::random(&mut OsRng)).collect();
-        let choice = VotingChoice::Basic(BasicVoting::For);
+        let choice = VotingChoice::Basic { choice: BasicVotingChoice::For };
 
 
         let clear_payload = ClearPayload::new_random(uuid::Uuid::new_v4(), choice, &mut OsRng);
