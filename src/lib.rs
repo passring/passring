@@ -57,6 +57,7 @@
 //! use passring::payload::ClearPayload;
 //! use passring::traits::Random;
 //! use rand_core::OsRng;
+//! use passring::choices::{BasicVoting, VotingChoice};
 //!
 //! // Generate a new voting ID
 //! let voting_id = uuid::Uuid::new_v4();
@@ -72,22 +73,23 @@
 //! let passring = Passring::new(voting_id, ring);
 //!
 //! // Create a new clear payload
-//! let choice = 0; // The choice of the voter
+//!
+//! let choice = VotingChoice::Basic(BasicVoting::For); // The choice of the voter
 //! let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
 //!
 //! // Encrypt the clear payload
 //! let key = ChaCha20Poly1305::generate_key(&mut OsRng); // Generate a new key
 //! let payload = clear_payload.encrypt(&key, &mut OsRng).expect("Failed to encrypt payload");
-//! 
+//!
 //! // Issue a new signature
 //! let full_signature = passring.issue::<OsRng>(payload, private_key).expect("Failed to issue signature");
-//! 
+//!
 //! // Verify the signature
 //! passring.verify(&full_signature).expect("Failed to verify signature");
-//! 
+//!
 //! // validate the signature (when the key is known)
 //! passring.validate(&full_signature, &key).expect("Failed to validate signature");
-//! 
+//!
 //! println!("Signature is valid");
 //! ```
 
@@ -97,6 +99,7 @@ pub mod passring;
 pub mod signature;
 pub mod traits;
 pub mod payload;
+pub mod choices;
 
 pub use crate::key::{private::PrivateKey, public::PublicKey};
 pub use crate::passring::Passring;

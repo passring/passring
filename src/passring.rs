@@ -75,10 +75,13 @@ impl Passring {
     /// ```
     /// use rand_core::OsRng;
     /// use passring::{Passring, PrivateKey, PublicKey};
+    /// use passring::choices::{BasicVoting, VotingChoice};
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     ///
     /// let voting_id = uuid::Uuid::new_v4();
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    ///
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
     ///
@@ -86,7 +89,7 @@ impl Passring {
     ///
     /// let passring = Passring::new(voting_id, ring);
     ///
-    /// let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+    /// let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
     ///
     /// let full_signature = passring.issue::<OsRng>(payload, private_key).expect("Failed to issue signature");
@@ -144,8 +147,11 @@ impl Passring {
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     /// use uuid::Uuid;
+    /// use passring::choices::{BasicVoting, VotingChoice};
     ///
     /// let voting_id = Uuid::new_v4();
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    ///
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
     ///
@@ -153,7 +159,7 @@ impl Passring {
     ///
     /// let passring = Passring::new(voting_id, ring);
     ///
-    /// let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+    /// let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
     ///
     /// let full_signature = passring.issue::<OsRng>(payload.clone(), private_key).expect("Failed to issue signature");
@@ -198,8 +204,11 @@ impl Passring {
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     /// use uuid::Uuid;
+    /// use passring::choices::{BasicVoting, VotingChoice};
     ///
     /// let voting_id = Uuid::new_v4();
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    ///
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
     ///
@@ -207,7 +216,7 @@ impl Passring {
     ///
     /// let passring = Passring::new(voting_id, ring);
     ///
-    /// let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+    /// let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
     ///
     /// let full_signature = passring.issue::<OsRng>(payload.clone(), private_key).expect("Failed to issue signature");
@@ -245,8 +254,11 @@ impl Passring {
     /// use passring::payload::ClearPayload;
     /// use passring::traits::Random;
     /// use uuid::Uuid;
+    /// use passring::choices::{BasicVoting, VotingChoice};
     ///
     /// let voting_id = Uuid::new_v4();
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
+    /// 
     /// let private_key = PrivateKey::random(&mut OsRng);
     /// let public_key = PublicKey::from(private_key);
     ///
@@ -254,7 +266,7 @@ impl Passring {
     ///
     /// let passring = Passring::new(voting_id, ring);
     ///
-    /// let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+    /// let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
     ///
     /// let full_signature = passring.issue::<OsRng>(payload.clone(), private_key).expect("Failed to issue signature");
@@ -279,12 +291,14 @@ impl Passring {
 mod tests {
     use rand_core::OsRng;
     use crate::{Passring, PrivateKey, PublicKey};
+    use crate::choices::{BasicVoting, VotingChoice};
     use crate::payload::ClearPayload;
     use crate::traits::Random;
 
     #[test]
     fn test_passring() {
         let voting_id = uuid::Uuid::new_v4();
+        let choice = VotingChoice::Basic(BasicVoting::For);
 
         let private_key = PrivateKey::random(&mut OsRng);
         let public_key = PublicKey::from(private_key);
@@ -293,7 +307,7 @@ mod tests {
 
         let passring = Passring::new(voting_id, ring);
 
-        let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+        let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
         let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
 
         let full_signature = passring.issue::<OsRng>(payload.clone(), private_key).expect("Failed to issue signature");
@@ -308,6 +322,7 @@ mod tests {
     #[test]
     fn test_linking() {
         let voting_id = uuid::Uuid::new_v4();
+        let choice = VotingChoice::Basic(BasicVoting::For);
 
         let private_key = PrivateKey::random(&mut OsRng);
         let public_key = PublicKey::from(private_key);
@@ -319,7 +334,7 @@ mod tests {
 
         let passring = Passring::new(voting_id, ring);
 
-        let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+        let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
         let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
 
         let full_signature = passring.issue::<OsRng>(payload.clone(), private_key).expect("Failed to issue signature");

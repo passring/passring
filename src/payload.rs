@@ -20,6 +20,7 @@ use chacha20poly1305::aead::Aead;
 use chacha20poly1305::aead::generic_array::GenericArray;
 use rand_core::CryptoRngCore;
 use serde::{Deserialize, Serialize};
+use crate::choices::VotingChoice;
 use crate::errors::PassringError::{InvalidPayload, SymmetricError};
 use crate::Result;
 
@@ -48,7 +49,7 @@ pub struct ClearPayload {
     /// Voting ID
     pub voting_id: uuid::Uuid,
     /// Choice
-    pub choice: u16,
+    pub choice: VotingChoice,
     /// Randomness. It is used for mitigating brute force attacks.
     pub randomness: Vec<u8>,
 }
@@ -132,15 +133,16 @@ impl ClearPayload {
     ///
     /// ```
     /// use passring::payload::ClearPayload;
+    /// use passring::choices::{BasicVoting, VotingChoice};
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = 0;
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
     /// let randomness = vec![0u8; 32]; // must be random bytes
     ///
     /// let payload = ClearPayload::new(voting_id, choice, randomness);
     /// ```
     #[must_use]
-    pub fn new(voting_id: uuid::Uuid, choice: u16, randomness: Vec<u8>) -> Self {
+    pub fn new(voting_id: uuid::Uuid, choice: VotingChoice, randomness: Vec<u8>) -> Self {
         ClearPayload {
             voting_id,
             choice,
@@ -159,13 +161,14 @@ impl ClearPayload {
     /// ```
     /// use passring::payload::ClearPayload;
     /// use rand_core::OsRng;
+    /// use passring::choices::{BasicVoting, VotingChoice};
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = 0;
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
     ///
     /// let payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// ```
-    pub fn new_random(voting_id: uuid::Uuid, choice: u16, rng: &mut impl CryptoRngCore) -> Self {
+    pub fn new_random(voting_id: uuid::Uuid, choice: VotingChoice, rng: &mut impl CryptoRngCore) -> Self {
         let mut randomness = vec![0u8; 32];
         rng.fill_bytes(&mut randomness);
         ClearPayload::new(voting_id, choice, randomness)
@@ -188,9 +191,10 @@ impl ClearPayload {
     /// use passring::payload::ClearPayload;
     /// use chacha20poly1305::{ChaCha20Poly1305, KeyInit};
     /// use rand_core::OsRng;
+    /// use passring::choices::{BasicVoting, VotingChoice};
     ///
     /// let voting_id = uuid::Uuid::new_v4();
-    /// let choice = 0;
+    /// let choice = VotingChoice::Basic(BasicVoting::For);
     ///
     /// let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
     /// let key = ChaCha20Poly1305::generate_key(&mut OsRng);
@@ -225,11 +229,13 @@ impl ClearPayload {
 mod tests {
     use super::*;
     use rand_core::OsRng;
+    use crate::choices::BasicVoting;
 
     #[test]
     fn test_payload() {
         let voting_id = uuid::Uuid::new_v4();
-        let clear_payload = ClearPayload::new(voting_id, 0, vec![0u8; 32]);
+        let choice = VotingChoice::Basic(BasicVoting::For);
+        let clear_payload = ClearPayload::new(voting_id, choice, vec![0u8; 32]);
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
         let payload = clear_payload.encrypt(&key, &mut OsRng).unwrap();
         let decrypted = payload.decrypt(&key).unwrap();
@@ -239,7 +245,8 @@ mod tests {
     #[test]
     fn test_payload_random() {
         let voting_id = uuid::Uuid::new_v4();
-        let clear_payload = ClearPayload::new_random(voting_id, 0, &mut OsRng);
+        let choice = VotingChoice::Basic(BasicVoting::For);
+        let clear_payload = ClearPayload::new_random(voting_id, choice, &mut OsRng);
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
         let payload = clear_payload.encrypt(&key, &mut OsRng).unwrap();
         let decrypted = payload.decrypt(&key).unwrap();

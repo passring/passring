@@ -123,6 +123,7 @@ mod tests {
     use super::*;
     use rand_core::OsRng;
     use sha3::Keccak512;
+    use crate::choices::{BasicVoting, VotingChoice};
     use crate::payload::ClearPayload;
     use crate::PrivateKey;
 
@@ -131,9 +132,10 @@ mod tests {
         let private_key = Scalar::random(&mut OsRng);
 
         let ring: Vec<_> = (0..9).map(|_| RistrettoPoint::random(&mut OsRng)).collect();
+        let choice = VotingChoice::Basic(BasicVoting::For);
 
 
-        let clear_payload = ClearPayload::new_random(uuid::Uuid::new_v4(), 0, &mut OsRng);
+        let clear_payload = ClearPayload::new_random(uuid::Uuid::new_v4(), choice, &mut OsRng);
         let payload = clear_payload.encrypt(&[0u8; 32], &mut OsRng).unwrap();
 
         let blsag_signature = BLSAG::sign::<Keccak512, OsRng>(
