@@ -37,32 +37,40 @@ pub enum VotingChoice {
 /// Basic voting
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum BasicVoting {
+    /// Vote for
     For,
+    /// Vote against
     Against,
+    /// Abstain
     Abstain,
 }
 
 /// Single choice voting
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct SingleChoiceVoting {
+    /// Choice
     pub choice: String,
 }
 
 /// Approval voting
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ApprovalVoting {
+    /// Approved choices
     pub choices: Vec<String>,
 }
 
 /// Rated voting
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct RatedVoting {
+    /// Choices
     pub choices: Vec<String>,
+    /// Ratings
     pub ratings: Vec<u8>,
 }
 
 /// Ranked choice voting (Instant-runoff voting)
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct RankedChoiceVoting {
+    /// Choices in order of preference
     pub choices: Vec<String>,
 }
