@@ -1,6 +1,6 @@
 [package]
 name = "passring"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Stanislav Zhevachevskyi <ih3xcode@protonmail.com>"]
 edition = "2021"
 description = "Secret remote electronic voting based on ring signatures"
